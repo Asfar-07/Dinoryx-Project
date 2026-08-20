@@ -7,6 +7,7 @@ import ThemeMode from "@/components/SmallUI/ThemeMode";
 import { MapPin, Menu, X } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { RippleButton } from "../ripple";
 
 const navLinks = [
   { text:"Home", link: "/"},
@@ -56,13 +57,14 @@ export default function Navbar() {
             {isAuth ? (
               <NavProfile />
             ) : (
-              <Link
-                to="/login"
-                className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium  transition-colors text-(--primary-text-color) hover:bg-white/10 sm:inline-flex"
+              <RippleButton
+                className="hidden rounded-full border border-white/10 bg-white/5 text-sm font-medium  transition-colors text-(--primary-text-color) hover:bg-white/10 sm:inline-flex"
               >
                 {" "}
+                <Link to="/login" className="flex px-4 py-2 ">
                 Login
-              </Link>
+                </Link>
+              </RippleButton>
             )}
 
             {isAuth && <NotifyIcon />}

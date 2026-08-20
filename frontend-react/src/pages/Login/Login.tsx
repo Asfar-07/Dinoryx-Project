@@ -15,6 +15,8 @@ import { useForm } from "react-hook-form";
 import FloatingCharacters from "@/components/animate-ui/FloatingCharacters";
 import { MagneticButton } from "@/components/magnetic";
 import { ShineButton } from "@/components/shine"; 
+import { TextHighlight } from "@/components/text-highlight";
+import { TextSplitReveal } from "@/components/split-reveal";
 
 export default function Login() {
   interface userForm {
@@ -163,8 +165,8 @@ export default function Login() {
             />
 
             <div className="relative">
-              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                WELCOME <span className="text-[#56b2bb]">BACK</span>
+              <h1 className="flex text-3xl font-extrabold tracking-tight sm:text-4xl">
+                WELCOME <TextSplitReveal delay={.5} duration={1} className="text-[#56b2bb] ml-3">BACK</TextSplitReveal>
               </h1>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#bac7cc]">
                 Welcome back! Please enter your details to continue
@@ -241,23 +243,23 @@ export default function Login() {
               {isSignup ? "Returning to DinoRyx? " : "New to DinoRyx? "}
               {isSignup ?
                 <button
-                  className="font-semibold text-[#56b2bb] underline underline-offset-2 hover:text-[#56b2bb]/80 cursor-pointer"
+                  className="font-semibold text-[#56b2bb]  hover:text-[#56b2bb]/80 cursor-pointer"
                   onClick={() => {
                     isSignup ? setIsSignup(false) : setIsSignup(true);
                     resetDefault()
                   }}
                 >
-                  Log In
+                  <TextHighlight height={2} pb={.5} color="#56b2bb" delay={.5} duration={2}>Log In</TextHighlight>
                 </button>
                 :
                 <button
-                  className="font-semibold text-[#56b2bb] underline underline-offset-2 hover:text-[#56b2bb]/80 cursor-pointer"
+                  className="font-semibold text-[#56b2bb] hover:text-[#56b2bb]/80 cursor-pointer"
                   onClick={() => {
                     isSignup ? setIsSignup(false) : setIsSignup(true);
                     resetDefault()
                   }}
                 >
-                  Create an account
+                  <TextHighlight height={2} pb={.5} color="#56b2bb" delay={.5} duration={2}>Create an account</TextHighlight>
                 </button>
               }
 
@@ -354,9 +356,11 @@ export default function Login() {
 
                 <a
                   href={"/login/forgot"}
-                  className="text-sm font-medium text-[#56b2bb] underline underline-offset-2 hover:text-[#56b2bb]/80"
-                >
-                  Forgot password?
+                  className="text-sm font-medium text-[#56b2bb]  hover:text-[#56b2bb]/80"
+                > 
+                  <TextHighlight height={2} pb={.5} color="#56b2bb" delay={.6} duration={2}>
+                    Forgot password?
+                  </TextHighlight>  
                 </a>
               </div>
 
@@ -403,14 +407,16 @@ export default function Login() {
             <p className="mt-6 text-center text-sm text-[#bac7cc]">
               {isSignup ? "Already have an account? " : "Don't have an account? "}
               <Button
-                className="font-semibold text-[#56b2bb] underline bg-transparent underline-offset-2 
+                className="font-semibold text-[#56b2bb] bg-transparent underline-offset-2 
                 hover:bg-transparent hover:text-[#56b2bb]/80 cursor-pointer"
                 onClick={() => {
                   isSignup ? setIsSignup(false) : setIsSignup(true);
                   resetDefault()
                 }}
               >
+                <TextHighlight height={2} pb={.5} color="#56b2bb" delay={1} duration={2}>
                 {isSignup ? "Log In" : "Sign In"}
+                </TextHighlight>
               </Button>
             </p>
           </div>

@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Cloud,
 } from "lucide-react";
+import { ShineButton } from "@/components/shine";
+import { BorderGradientButton } from "@/components/border-gradient";
 
 interface RootState {
   userauth: {
@@ -194,33 +196,46 @@ export default function MainHero(): React.JSX.Element {
             className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
           >
             {isAuth ? (
-              <Link
-                to="/account"
-                className="flex items-center gap-1.5 rounded-full  px-7 py-4 text-sm font-semibold text-[#0a0f22] 
+              <ShineButton className=" overflow-hidden">
+                <Link
+                  to="/account"
+                  className="flex items-center gap-1.5 rounded-full  px-7 py-4 text-sm font-semibold text-[#0a0f22] 
           to-primary-glow shadow-[0_0_40px_-10px_rgba(86,178,187,0.6)] transition-transform hover:scale-[1.03] cursor-pointer"
-              >
-                Get Started
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+                >
+                  ``
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </ShineButton>
             ) : (
-              <Link
-                to="/Login"
-                className="flex items-center gap-1.5 rounded-full  px-7 py-4 text-sm font-semibold text-[#0a0f22] 
+              <ShineButton className=" overflow-hidden rounded-full ">
+                <Link
+                  to="/Login"
+                  className="flex items-center gap-1.5 rounded-full px-7 py-4 text-sm font-semibold text-[#0a0f22] 
           to-primary-glow shadow-[0_0_40px_-10px_rgba(86,178,187,0.6)] transition-transform hover:scale-[1.03] cursor-pointer"
-              >
-                Get Started
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+                >
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </ShineButton>
             )}
 
-            <Link
-              to="/nearby-location"
-              className="glass flex items-center gap-1.5 rounded-full border-[#f0f4f8]/15  px-7 py-4 text-sm font-semibold
+            <BorderGradientButton
+            colors={["#10b981", "#06b6d4", "#3b82f6"]}
+            duration={10}
+            borderWidth={1}
+              className="glass flex flex-row items-center gap-1.5 rounded-full border-[#f0f4f8]/15  text-sm font-semibold
              text-(--primary-text-color) hover:bg-[#1d2233] cursor-pointer"
             >
-              <MapPin className="h-4 w-4 text-[#56b2bb]" />
+              <Link
+              to="/nearby-location"
+              className="flex size-full px-7 py-4"
+              >
+              <MapPin className="h-4 w-4 text-[#56b2bb] mr-2" />
               Explore Nearby Gyms
-            </Link>
+              </Link>
+              
+            </BorderGradientButton>
           </motion.div>
 
           <motion.div

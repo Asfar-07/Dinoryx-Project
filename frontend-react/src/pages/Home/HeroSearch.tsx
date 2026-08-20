@@ -125,7 +125,7 @@ export default function HeroSearch(): React.JSX.Element {
 
           <Button
             type="submit"
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-2xl  bg-(--symbol-color) px-5 py-5 text-sm font-medium text-[#0a0f22] transition-transform hover:scale-[1.02]"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-2xl cursor-pointer  bg-(--symbol-color) px-5 py-5 text-sm font-medium text-[#0a0f22] transition-transform hover:bg-(--symbol-color) hover:text-white hover:scale-[1.02]"
           >
             Search
             <ArrowRight className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default function HeroSearch(): React.JSX.Element {
               variants={tagVariants}
               type="button"
               onClick={() => setQuery(tag)}
-              className="glass-li rounded-full px-3.5 py-1.5 text-xs font-medium text-(--secondary-text-color) hover:text-(--primary-text-color)"
+              className="glass-li rounded-full cursor-pointer px-3.5 py-1.5 text-xs font-medium text-(--secondary-text-color) hover:text-(--primary-text-color)"
             >
               {tag}
             </motion.button>
