@@ -1,41 +1,88 @@
+import { useEffect, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { MapPin, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { TrainerQuestionsProps } from "../Onboarding.types";
+import type Questions from "../Onboarding.types";
+import type { TrainerKey, DaysKey, ExperienceKey } from '../Onboarding.types';
 
-export default function TrainerQuestions({ step, role, experienceLevels, experience, setExperience, sessionsPerWeek, setSessionsPerWeek,
-   days, selectedDays, toggleDay, city, setCity, studentCount, setStudentCount, communityTrainerOptions, community, setCommunity }:
-   TrainerQuestionsProps) {
+export default function TrainerQuestions({ step, questions, role, experience, setExperience, sessionsPerWeek, setSessionsPerWeek,
+  selectedDays, toggleDay, city, setCity, studentCount, setStudentCount, communityTrainerOptions, community, setCommunity }:
+  TrainerQuestionsProps) {
+
+  const [workDay, setWorkDay] = useState<Questions<DaysKey> | undefined>();
+  const [qExperience, setQExperience] = useState<Questions<ExperienceKey> | undefined>();
+  const [qCity,setQCity] = useState<Questions<string> | undefined>();
+
+  useEffect(() => {
+    questions.forEach((qs) => {
+      if ((qs.questionKey as TrainerKey) === "experience") {
+        const experienceQuestion: Questions<ExperienceKey> = {
+          ...qs,
+          options: qs.options.map((opt) => ({
+            ...opt,
+            optionKey: opt.optionKey as ExperienceKey,
+          })),
+        };
+
+        setQExperience(experienceQuestion);
+      }
+
+      if ((qs.questionKey as TrainerKey) === "work_day") {
+        const workDaysQuestion: Questions<DaysKey> = {
+          ...qs,
+          options: qs.options.map((opt) => ({
+            ...opt,
+            optionKey: opt.optionKey as DaysKey,
+          })),
+        };
+
+        setWorkDay(workDaysQuestion);
+      }
+
+      if ((qs.questionKey as TrainerKey) === "user_location") {
+        const cityQuestion: Questions<string> = {
+          ...qs,
+          options: qs.options.map((opt) => ({
+            ...opt,
+            optionKey: opt.optionKey as string,
+          })),
+        };
+
+        setQCity(cityQuestion);
+      }
+    });
+  }, []);
   return (
     <div>
       {/* trainer and gym owner experience step */}
       {step === 3 && (role === "trainer" || role === "gym_owner") && (
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            How experienced are you?
+            {qExperience?.questionText}
           </h1>
           <p className="mt-2 text-[#bac7cc]">
             Helps us calibrate plans and metrics.
           </p>
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {experienceLevels.map(({ level, label }) => {
-              const selected = experience === level;
+            {qExperience?.options.map(({ optionText, optionKey }, index) => {
+              const selected = experience === optionKey;
               return (
                 <button
-                  key={level}
+                  key={optionKey}
                   type="button"
-                  onClick={() => setExperience(level)}
+                  onClick={() => setExperience(optionKey)}
                   className={`flex flex-col items-center gap-2 rounded-2xl py-6 ring-1 transition-all ${selected
-                      ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
-                      : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
+                    ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
+                    : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
                     }`}
                 >
                   <span className="text-3xl font-extrabold text-(--symbol-color)">
-                    {level}
+                    {index + 1}
                   </span>
                   <span className="font-semibold text-[#f0f4f8]">
-                    {label}
+                    {optionText}
                   </span>
                 </button>
               );
@@ -67,26 +114,26 @@ export default function TrainerQuestions({ step, role, experienceLevels, experie
       {step === 4 && (role === "trainer" || role === "gym_owner") && (
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            where do you training?
+            {workDay?.questionText}
           </h1>
           <p className="mt-2 text-[#bac7cc]">
             Pick your usual days and where you are.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {days.map((day) => {
-              const selected = selectedDays.includes(day);
+            {workDay?.options.map(({id, optionKey, optionText}) => {
+              const selected = selectedDays.includes(optionKey);
               return (
                 <button
-                  key={day}
+                  key={id}
                   type="button"
-                  onClick={() => toggleDay(day)}
+                  onClick={() => toggleDay(optionKey)}
                   className={`flex h-16 w-16 items-center justify-center rounded-full text-sm font-bold ring-1 transition-colors ${selected
-                      ? "bg-(--symbol-color) text-[#0a0f22] ring-(--symbol-color)"
-                      : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
+                    ? "bg-(--symbol-color) text-[#0a0f22] ring-(--symbol-color)"
+                    : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
                     }`}
                 >
-                  {day}
+                  {optionText}
                 </button>
               );
             })}
@@ -96,7 +143,7 @@ export default function TrainerQuestions({ step, role, experienceLevels, experie
             <div>
               <label className="flex items-center gap-1.5 text-sm font-semibold text-[#f0f4f8]">
                 <MapPin className="h-4 w-4 text-(--symbol-color)" />
-                Your city
+                {qCity?.questionText}
               </label>
               <Input
                 value={city}
@@ -151,8 +198,8 @@ export default function TrainerQuestions({ step, role, experienceLevels, experie
                   type="button"
                   onClick={() => setCommunity(id)}
                   className={`relative flex flex-col items-start gap-1 rounded-2xl p-5 text-left ring-1 transition-all ${selected
-                      ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
-                      : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
+                    ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
+                    : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
                     }`}
                 >
                   {selected && (

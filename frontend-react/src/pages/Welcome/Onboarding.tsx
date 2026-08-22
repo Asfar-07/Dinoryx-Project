@@ -6,9 +6,6 @@ import {
   Dumbbell,
   Users,
   Building2,
-  Flame,
-  Timer,
-  HeartPulse,
   Trophy,
   Target,
   MapPin,
@@ -26,129 +23,9 @@ import StudentQuestions from "./SubPage/StudentQuestions";
 import TrainerQuestions from "./SubPage/TrainerQuestions";
 
 import type Questions from "./Onboarding.types";
-import type { Role, Roles, GoalOptions, Source, SourceOptions, Community, CommunityStudentOptions } from "./Onboarding.types";
+import type { Role, Roles, Source, SourceOptions, Community, CommunityStudentOptions } from "./Onboarding.types";
 import GeneralLoader from "@/components/Loader/GeneralLoader";
-
-const demoQuestions: Questions[] = [
-    {
-        id: 1,
-        order: 1,
-        questionKey: "hear_about",
-        questionText: "Where did you hear about DinoRyx?",
-        type: "SINGLE",
-        required: true,
-        active: true,
-        options: [
-            {
-                id: 4,
-                optionKey: "share_instagram",
-                optionText: "Instagram",
-                order: 3,
-                active: true
-            },
-            {
-                id: 3,
-                optionKey: "share_friends",
-                optionText: "Friends",
-                order: 2,
-                active: true
-            },
-            {
-                id: 2,
-                optionKey: "other_social",
-                optionText: "Another Social Media",
-                order: 4,
-                active: true
-            },
-            {
-                id: 1,
-                optionKey: "share_google",
-                optionText: "Google",
-                order: 1,
-                active: true
-            }
-        ]
-    },
-    {
-        id: 2,
-        order: 2,
-        questionKey: "user_role",
-        questionText: "Who are you training as?",
-        type: "SINGLE",
-        required: true,
-        active: true,
-        options: [
-            {
-                id: 5,
-                optionKey: "trainer",
-                optionText: "Trainer",
-                order: 1,
-                active: true
-            },
-            {
-                id: 6,
-                optionKey: "student",
-                optionText: "Student",
-                order: 2,
-                active: true
-            },
-            {
-                id: 7,
-                optionKey: "gym_owner",
-                optionText: "Gym Owner",
-                order: 2,
-                active: true
-            }
-        ]
-    }
-];
-
-const roles: Roles[] = [
-  {
-    id: "trainer",
-    icon: Dumbbell,
-    title: "Trainer",
-    description: "Manage students, plans & billing",
-  },
-  {
-    id: "student",
-    icon: Users,
-    title: "Student",
-    description: "Track progress & find gyms",
-  },
-  {
-    id: "gym_owner",
-    icon: Building2,
-    title: "Gym Owner",
-    description: "Run your gym & team at scale",
-  },
-];
-
-const goalOptions: GoalOptions[] =
-  [
-    { id: "build_strength", icon: Dumbbell, label: "Build Strength" },
-    { id: "fat_loss", icon: Flame, label: "Fat Loss" },
-    { id: "endurance", icon: Timer, label: "Endurance" },
-    { id: "general_health", icon: HeartPulse, label: "General Health" },
-    { id: "competition_prep", icon: Trophy, label: "Competition Prep" },
-    { id: "consistency", icon: Target, label: "Consistency" },
-  ];
-
-const experienceLevels = [
-  { level: 1, label: "Beginner" },
-  { level: 2, label: "Intermediate" },
-  { level: 3, label: "Advanced" },
-  { level: 4, label: "Elite" },
-];
-
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const sourceOptions: SourceOptions[] = [
-  { id: "google", icon: Search, title: "Google" },
-  { id: "friends", icon: Search, title: "Friends" },
-  { id: "instagram", icon: Search, title: "Instagram" },
-  { id: "other_social", icon: Search, title: "Another social media" },
-];
+import { demoQuestions } from "./Questions";
 
 
 const communityStudentOptions: {
@@ -186,19 +63,19 @@ const TOTAL_STEPS = 6;
 //helper functions
 
 function roleLabel(role: Role | null) {
-  return roles.find((r) => r.id === role)?.title ?? "Not set";
+  return demoQuestions.find((e) => e.questionKey)?.options.find((r) => r.optionKey === role)?.optionText ?? "Not set";
 }
 
-function experienceLabel(level: number) {
-  return experienceLevels.find((e) => e.level === level)?.label ?? "Not set";
+function experienceLabel(level: string) {
+  return demoQuestions.find((e) => e.questionKey)?.options.find((e)=>e.optionKey === level)?.optionText ?? "Not set";
 }
 
 function sourceLabel(source: Source | null) {
-  return sourceOptions.find((s) => s.id === source)?.title ?? "Not set";
+  return demoQuestions.find((e) => e.questionKey)?.options.find((s) => s.optionKey === source)?.optionText ?? "Not set";
 }
 
 function communityLabel(community: Community | null) {
-  return communityStudentOptions.find((c) => c.id === community)?.title ?? "Not set";
+  return demoQuestions.find((e) => e.questionKey)?.options.find((r) => r.optionKey === community)?.optionText ?? "Not set";
 }
 
 //last step summary card component
@@ -233,7 +110,7 @@ export default function DinoRyxOnboarding() {
   const [source, setSource] = React.useState<Source | null>("share_friends");
   const [role, setRole] = React.useState<Role | null>("student");
   const [goals, setGoals] = React.useState<string[]>(["fat_loss", "endurance"]);
-  const [experience, setExperience] = React.useState<number>(2);
+  const [experience, setExperience] = React.useState<string>("Intermediate");
   const [sessionsPerWeek, setSessionsPerWeek] = React.useState<number>(3);
   const [selectedDays, setSelectedDays] = React.useState<string[]>([]);
   const [city, setCity] = React.useState<string>("");
@@ -403,15 +280,15 @@ export default function DinoRyxOnboarding() {
                 <NormalQuestions step={step} questions={demoQuestions} source={source} setSource={setSource} role={role} setRole={setRole} 
                 />
 
-                <StudentQuestions role={role} step={step} goalOptions={goalOptions} goals={goals} toggleGoal={toggleGoal}
-                  days={days} selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
+                <StudentQuestions role={role} questions={demoQuestions} step={step} goals={goals} toggleGoal={toggleGoal}
+                  selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
                   remindersOn={remindersOn} setRemindersOn={setRemindersOn} communityStudentOptions={communityStudentOptions}
                   community={community} setCommunity={(id) => setCommunity(id as Community)}
                 />
 
-                <TrainerQuestions role={role} step={step} experienceLevels={experienceLevels} experience={experience} setExperience={setExperience}
+                <TrainerQuestions role={role} questions={demoQuestions} step={step} experience={experience} setExperience={setExperience}
                   sessionsPerWeek={sessionsPerWeek} setSessionsPerWeek={setSessionsPerWeek}
-                  days={days} selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
+                  selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
                   communityTrainerOptions={communityTrainerOptions} community={community} setCommunity={(id) => setCommunity(id as Community)}
                   studentCount={studentCount} setStudentCount={setStudentCount}
                 />

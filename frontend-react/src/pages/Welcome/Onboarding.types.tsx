@@ -2,6 +2,10 @@ import type { LucideIcon } from "lucide-react";
 
 export type NormalKey = "hear_about" | "user_role"
 
+export type StudentKey = "user_goals" | "work_day" | "user_location" | "workout_reminder" | "build_community"
+
+export type TrainerKey = "experience" | "work_Sessions_week" | "work_day" | "user_location" | "build_community"
+
 export type Role = "trainer" | "student" | "gym_owner";
 
 export type Source =
@@ -16,6 +20,13 @@ export type QsType =
     | "TEXT"
     | "SCALE"
     | "BOOLEAN";
+
+export type GoalOptionKey = "strength" | "fat_loss" | "endurance" | "general_health" | "competition_prep" | "consistency"
+
+
+export type DaysKey = "mon"| "tue"| "wed"| "thu"| "fri"| "sat"| "sun";
+
+export type ExperienceKey = "beginner" | "intermediate" | "advanced" | "elite";
 
 export interface Option<TOptionKey extends string> {
     id: number;
@@ -76,9 +87,9 @@ export interface NormalQuestionsProps {
 }
 
 export interface StudentQuestions {
-  role: Role | null, step: number, goalOptions: GoalOptions[],
+  role: Role | null, questions:Questions[], step: number,
   goals: string[], toggleGoal: (goalId: string) => void,
-  days: string[], selectedDays: string[], toggleDay: (day: string) => void,
+  selectedDays: string[], toggleDay: (day: string) => void,
   city: string, setCity: (city: string) => void,
   remindersOn: boolean, setRemindersOn: (on: boolean) => void,
   communityStudentOptions: CommunityStudentOptions[],
@@ -86,11 +97,23 @@ export interface StudentQuestions {
 }
 
 export interface TrainerQuestionsProps {
-  step: number, role: Role | null, experienceLevels: any[],
-  experience: number, setExperience: (level: number) => void,
+  step: number, role: Role | null,
+  experience: string, questions:Questions[], setExperience: (level: string) => void,
   sessionsPerWeek: number, setSessionsPerWeek: (sessions: number) => void,
-  days: string[], selectedDays: string[], toggleDay: (day: string) => void,
+  selectedDays: string[], toggleDay: (day: string) => void,
   city: string, setCity: (city: string) => void, studentCount: number,
   setStudentCount: (count: number) => void, communityTrainerOptions: CommunityTrainerOptions[],
   community: Community | null, setCommunity: (id: Community) => void
+}
+
+export interface ResponseToBack {
+  sessionId: number,
+  surveyVersionId: number,
+  responses:responsesASW[]
+}
+
+interface responsesASW {
+  selectedOptionId: number,
+  selectedOptionIds: number[],
+  freeTextValue: string
 }

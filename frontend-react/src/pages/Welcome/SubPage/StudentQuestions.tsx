@@ -1,37 +1,86 @@
+import { useEffect, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import { Check } from "lucide-react";
-import { MapPin, Bell } from "lucide-react"
+import { MapPin, Bell, Dumbbell, Flame, Timer, HeartPulse, Trophy, Target } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import type { StudentQuestions } from '../Onboarding.types';
+import type Questions from "../Onboarding.types";
+import type { StudentQuestions, GoalOptionKey, StudentKey, DaysKey } from '../Onboarding.types';
 
-export default function StudentQuestions({ role, step, goalOptions, goals, toggleGoal, days, selectedDays, toggleDay,
+export default function StudentQuestions({ role, questions, step, goals, toggleGoal, selectedDays, toggleDay,
   city, setCity, remindersOn, setRemindersOn, communityStudentOptions, community, setCommunity }:
   StudentQuestions) {
+
+    const [userGoal, setUserGoal] = useState<Questions<GoalOptionKey> | undefined>();
+    const [workDay, setWorkDay] = useState<Questions<DaysKey> | undefined>();
+    const [qCity,setQCity] = useState<Questions<string>>();
+
+    useEffect(() => {
+      const getGoalIcons = (key: GoalOptionKey): LucideIcon => {
+
+        if(key === "strength") return Dumbbell
+        if(key === "fat_loss") return Flame
+        if(key === "endurance") return Timer
+        if(key === "general_health") return HeartPulse
+        if(key === "competition_prep") return Trophy
+        return Target
+      };
+      questions.forEach((qs) => {
+         if (qs.questionKey as StudentKey === "user_goals"){
+          const userGoalQuestion: Questions<GoalOptionKey> = {
+            ...qs,
+            options: qs.options.map((opt) => ({
+              ...opt,
+              optionKey: opt.optionKey as GoalOptionKey,
+              icon: getGoalIcons(opt.optionKey as GoalOptionKey)
+            }))
+          }
+
+          setUserGoal(userGoalQuestion);
+         }
+
+         if (qs.questionKey as StudentKey === "work_day"){
+          const workDaysQuestion: Questions<DaysKey> = {
+            ...qs,
+            options: qs.options.map((opt) => ({
+              ...opt,
+              optionKey: opt.optionKey as DaysKey,
+            }))
+          }
+
+          setWorkDay(workDaysQuestion);
+         }
+
+         if (qs.questionKey as StudentKey === "user_location"){
+          setQCity({...qs})
+         }
+      })
+    }, [questions])
   return (
     <div>
       {/* user goal for student */}
       {step === 3 && role === "student" && (
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            What are your main goals?
+            {userGoal?.questionText}
           </h1>
           <p className="mt-2 text-[#bac7cc]">Pick as many as you like.</p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {goalOptions.map(({ id, icon: Icon, label }) => {
-              const selected = goals.includes(id);
+            {userGoal?.options.map(({ id, optionKey, icon: Icon, optionText }) => {
+              const selected = goals.includes(optionKey);
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => toggleGoal(id)}
+                  onClick={() => toggleGoal(optionKey)}
                   className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold ring-1 transition-colors ${selected
                     ? "bg-[#56b2bb]/15 text-(--symbol-color) ring-(--symbol-color)"
                     : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
                     }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {label}
+                  {Icon &&<Icon className="h-4 w-4" />}
+                  {optionText}
                 </button>
               );
             })}
@@ -48,26 +97,26 @@ export default function StudentQuestions({ role, step, goalOptions, goals, toggl
       {step === 4 && role === "student" && (
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            When do you train?
+            {workDay?.questionText}
           </h1>
           <p className="mt-2 text-[#bac7cc]">
             Pick your usual days and where you are.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {days.map((day) => {
-              const selected = selectedDays.includes(day);
+            {workDay?.options.map(({id, optionKey, optionText}) => {
+              const selected = selectedDays.includes(optionKey);
               return (
                 <button
-                  key={day}
+                  key={id}
                   type="button"
-                  onClick={() => toggleDay(day)}
+                  onClick={() => toggleDay(optionKey)}
                   className={`flex h-16 w-16 items-center justify-center rounded-full text-sm font-bold ring-1 transition-colors ${selected
                     ? "bg-(--symbol-color) text-[#0a0f22] ring-(--symbol-color)"
                     : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
                     }`}
                 >
-                  {day}
+                  {optionText}
                 </button>
               );
             })}
@@ -77,7 +126,7 @@ export default function StudentQuestions({ role, step, goalOptions, goals, toggl
             <div>
               <label className="flex items-center gap-1.5 text-sm font-semibold text-[#f0f4f8]">
                 <MapPin className="h-4 w-4 text-(--symbol-color)" />
-                Your city
+                {qCity?.questionText}
               </label>
               <Input
                 value={city}
