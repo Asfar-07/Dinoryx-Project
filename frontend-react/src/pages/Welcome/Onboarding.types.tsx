@@ -4,7 +4,7 @@ export type NormalKey = "hear_about" | "user_role"
 
 export type StudentKey = "user_goals" | "work_day" | "user_location" | "workout_reminder" | "build_community"
 
-export type TrainerKey = "experience" | "work_Sessions_week" | "work_day" | "user_location" | "build_community"
+export type TrainerKey = "experience" | "work_sessions_week" | "work_day" | "user_location" | "student_count" | "build_community"
 
 export type Role = "trainer" | "student" | "gym_owner";
 
@@ -49,6 +49,13 @@ export default interface Questions<TOptionKey extends string = string> {
     options: Option<TOptionKey>[];
 }
 
+export type diffQsRole = "normal" | "student" | "trainer"
+
+export interface BluePrintQs {
+  key: string;
+  step: number;
+  role: diffQsRole;
+}
 
 export interface Roles {
   id: Role;
@@ -82,38 +89,41 @@ export interface CommunityTrainerOptions {
 }
 
 export interface NormalQuestionsProps {
-  step: number, questions: Questions[]
-  source: Source | null, setSource: (source: Source) => void, role: Role | null, setRole: (role: Role) => void
+  step: number, setRole: (role : Role) => void; questions: Questions[], addResponse: (collection: Collection, qsRole : diffQsRole) => void,
+  getSelectedOptionId: (qsId:string, qsRole : diffQsRole) => {options?: number[], text?: string} | undefined,
+
 }
 
 export interface StudentQuestions {
   role: Role | null, questions:Questions[], step: number,
-  goals: string[], toggleGoal: (goalId: string) => void,
-  selectedDays: string[], toggleDay: (day: string) => void,
-  city: string, setCity: (city: string) => void,
-  remindersOn: boolean, setRemindersOn: (on: boolean) => void,
-  communityStudentOptions: CommunityStudentOptions[],
-  community: Community | null, setCommunity: (communityId: string) => void
+  addResponse: (collection: Collection, qsRole : diffQsRole) => void,
+  getSelectedOptionId: (qsId:string, qsRole : diffQsRole) => {options?: number[], text?: string} | undefined,
 }
 
 export interface TrainerQuestionsProps {
-  step: number, role: Role | null,
-  experience: string, questions:Questions[], setExperience: (level: string) => void,
-  sessionsPerWeek: number, setSessionsPerWeek: (sessions: number) => void,
-  selectedDays: string[], toggleDay: (day: string) => void,
-  city: string, setCity: (city: string) => void, studentCount: number,
-  setStudentCount: (count: number) => void, communityTrainerOptions: CommunityTrainerOptions[],
-  community: Community | null, setCommunity: (id: Community) => void
+  step: number, role: Role | null, questions:Questions[],
+  addResponse: (collection: Collection, qsRole : diffQsRole) => void,
+  getSelectedOptionId: (qsId:string, qsRole : diffQsRole) => {options?: number[], text?: string} | undefined,
 }
 
 export interface ResponseToBack {
-  sessionId: number,
-  surveyVersionId: number,
-  responses:responsesASW[]
+  sessionId: number;
+  surveyVersionId: number;
+  responses: Record<number, ResponseEntry>;
 }
 
-interface responsesASW {
-  selectedOptionId: number,
-  selectedOptionIds: number[],
-  freeTextValue: string
+export interface ResponseEntry {
+  selectedOptionId?: number;
+  selectedOptionIds?: number[];
+  freeTextValue?: string;
+}
+
+export interface Collection {
+  role?: diffQsRole;
+  QsId: number;
+  QsKey: string;
+  type?: QsType;
+  step?: number;
+  option?: number[];
+  freeText?: string;
 }

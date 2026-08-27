@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   ArrowRight,
-  Dumbbell,
   Users,
-  Building2,
   Trophy,
   Target,
   MapPin,
@@ -23,59 +21,37 @@ import StudentQuestions from "./SubPage/StudentQuestions";
 import TrainerQuestions from "./SubPage/TrainerQuestions";
 
 import type Questions from "./Onboarding.types";
-import type { Role, Roles, Source, SourceOptions, Community, CommunityStudentOptions } from "./Onboarding.types";
+import type { Role, diffQsRole, ResponseToBack, Collection, QsType, NormalKey, TrainerKey, StudentKey, ResponseEntry } from "./Onboarding.types";
 import GeneralLoader from "@/components/Loader/GeneralLoader";
 import { demoQuestions } from "./Questions";
 
-
-const communityStudentOptions: {
-  id: Community;
-  title: string;
-  description: string;
-}[] = [
-    {
-      id: "yes",
-      title: "Yes, I'm in!",
-      description: "Count me in for updates & feedback",
-    },
-    {
-      id: "later",
-      title: "Maybe later",
-      description: "I'll decide another time",
-    },
-  ];
-
-const communityTrainerOptions: CommunityStudentOptions[] = [
-  {
-    id: "yes",
-    title: "Yes, Let's go",
-    description: "Count me in for updates & feedback",
-  },
-  {
-    id: "later",
-    title: "Not yet",
-    description: "I'll decide another time",
-  },
-];
 
 const TOTAL_STEPS = 6;
 
 //helper functions
 
-function roleLabel(role: Role | null) {
-  return demoQuestions.find((e) => e.questionKey)?.options.find((r) => r.optionKey === role)?.optionText ?? "Not set";
+function findCollectionOption(collection: Collection[], QuestionKey: NormalKey | StudentKey | TrainerKey, role: diffQsRole) {
+  return collection.find((q) => q.QsKey === QuestionKey && q.role === role)?.option
 }
 
-function experienceLabel(level: string) {
-  return demoQuestions.find((e) => e.questionKey)?.options.find((e)=>e.optionKey === level)?.optionText ?? "Not set";
+function roleLabel(collection: Collection[]) {
+  const questionKey: NormalKey = "user_role";
+  return demoQuestions.find((e) => e.questionKey === questionKey)?.options.find((r) => findCollectionOption(collection, questionKey, "normal")?.includes(r.id))?.optionText ?? "Not set";
 }
 
-function sourceLabel(source: Source | null) {
-  return demoQuestions.find((e) => e.questionKey)?.options.find((s) => s.optionKey === source)?.optionText ?? "Not set";
+function experienceLabel(collection: Collection[]) {
+  const questionKey: TrainerKey = "experience";
+  return demoQuestions.find((e) => e.questionKey === questionKey)?.options.find((r) => findCollectionOption(collection, questionKey, "trainer")?.includes(r.id))?.optionText ?? "Not set";
 }
 
-function communityLabel(community: Community | null) {
-  return demoQuestions.find((e) => e.questionKey)?.options.find((r) => r.optionKey === community)?.optionText ?? "Not set";
+function sourceLabel(collection: Collection[]) {
+  const questionKey: NormalKey = "hear_about";
+  return demoQuestions.find((e) => e.questionKey === questionKey)?.options.find((r) => findCollectionOption(collection, questionKey, "normal")?.includes(r.id))?.optionText ?? "Not set";
+}
+
+function communityLabel(collection: Collection[], role: diffQsRole) {
+  const questionKey: StudentKey = "build_community";
+  return collection.find((q) => q.QsKey === questionKey && q.role === role)?.freeText === "true" ? "Yes" : "No";
 }
 
 //last step summary card component
@@ -106,17 +82,12 @@ export default function DinoRyxOnboarding() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [finished, setFinished] = React.useState<boolean>(false);
   // const [questions, setQuestions] = React.useState<Questions[]>([]);
+  const [collectionRes, setCollectionRes] = React.useState<Collection[]>([]);
 
-  const [source, setSource] = React.useState<Source | null>("share_friends");
+
   const [role, setRole] = React.useState<Role | null>("student");
-  const [goals, setGoals] = React.useState<string[]>(["fat_loss", "endurance"]);
-  const [experience, setExperience] = React.useState<string>("Intermediate");
-  const [sessionsPerWeek, setSessionsPerWeek] = React.useState<number>(3);
-  const [selectedDays, setSelectedDays] = React.useState<string[]>([]);
-  const [city, setCity] = React.useState<string>("");
-  const [studentCount, setStudentCount] = React.useState<number>(0);
-  const [remindersOn, setRemindersOn] = React.useState<boolean>(true);
-  const [community, setCommunity] = React.useState<Community | null>(null);
+
+  // const [finalResponse, setFinalResponse] = React.useState<ResponseToBack>({ sessionId: 414134, surveyVersionId: 324324, responses: [] });
 
   const percentComplete = finished
     ? 100
@@ -132,6 +103,115 @@ export default function DinoRyxOnboarding() {
     { label: "Finish" },
   ][step - 1];
 
+  React.useEffect(() => {
+    const normalKey: NormalKey[] = ["hear_about", "user_role"]
+    const studentKey: StudentKey[] = ["user_goals", "user_location", "work_day", "workout_reminder", "build_community"]
+    const trainerKey: TrainerKey[] = ["experience", "work_sessions_week", "work_day", "user_location", "student_count", "build_community"]
+
+    const roleKeys = {
+      normal: normalKey,
+      student: studentKey,
+      trainer: trainerKey
+    } as const;
+
+    //create a collection from backend data qs for add user response response 
+    const questionCollection: Collection[] = Object.entries(roleKeys)
+      .flatMap(([role, keys]) =>
+        keys.flatMap((key) => {
+          const question = demoQuestions.find(
+            (q) => q.questionKey === key
+          );
+
+          if (!question) return [];
+
+          var randomOption;
+
+          if (question.options) {
+            randomOption = question.options[Math.floor(Math.random() * question.options.length)];
+          }
+
+          return {
+            role: role as "normal" | "student" | "trainer",
+            type: question.type,
+            QsKey: question.questionKey,
+            QsId: question.id,
+
+            freeText:
+              question.type === "BOOLEAN" ||
+                question.type === "TEXT" ||
+                question.type === "SCALE"
+                ? ""
+                : "",
+
+            option:
+              question.type === "SINGLE" || question.type === "MULTIPLE"
+                ? randomOption ? [randomOption.id] : []
+                : randomOption ? [randomOption.id] : []
+          }
+        })
+      );
+    setCollectionRes(questionCollection)
+
+  }, [demoQuestions])
+
+  // collected user response and add to collectionRes list
+  function addResponse(collection: Collection, qsRole: diffQsRole) {
+
+    if (collection.type === "SINGLE" as QsType || collection.type === "MULTIPLE" as QsType) {
+      setCollectionRes(prev =>
+        prev.map(item => {
+          if (item.role !== qsRole) return item;
+          if (item.QsKey !== collection.QsKey) return item;
+
+          const selectedOption = collection.option?.[0];
+          if (selectedOption === undefined) return item;
+
+          const currentOptions = item.option ?? [];
+          const exists = currentOptions.includes(selectedOption);
+
+          return {
+            ...item,
+            option: exists
+              ? (collection.type === "SINGLE") ? [selectedOption] : currentOptions.filter(id => id !== selectedOption)
+              : (collection.type === "SINGLE") ? [selectedOption] : [...currentOptions, selectedOption],
+            type: collection.type,
+            step: collection.step
+          };
+        })
+      );
+
+    } if (collection.type === "TEXT" as QsType || collection.type === "BOOLEAN" as QsType || collection.type === "SCALE" as QsType) {
+      setCollectionRes(prev =>
+        prev.map(item => {
+          if (item.role !== qsRole) return item;
+          if (item.QsKey !== collection.QsKey) return item;
+
+          return {
+            ...item,
+            freeText: String(collection.freeText),
+            type: collection.type,
+            step: collection.step
+          }
+        })
+      )
+    }
+  }
+
+  // which option user selected
+  function getSelectedOptionId(qsId: string, qsRole: diffQsRole): { options?: number[], text?: string } | undefined {
+    const qs = collectionRes.find((c) => c.QsKey === qsId && c.role === qsRole);
+    const type = qs?.type;
+    if (type === "SINGLE" || type === "MULTIPLE") {
+      return { options: qs?.option }
+    }
+    if (type === "TEXT" || type === "BOOLEAN" || type === "SCALE") {
+      return { text: qs?.freeText }
+    }
+  }
+
+  React.useEffect(() => {
+    // console.log(collectionRes)
+  }, [collectionRes])
 
   React.useEffect(() => {
     let cancelled = false;
@@ -140,7 +220,7 @@ export default function DinoRyxOnboarding() {
       .then((data: Questions[]) => {
         if (cancelled) return;
         console.log("Survey questions:", data);
-
+        // setFinalResponse((d) => d?.sessionId: 10)
         setLoading(false);
       })
       .catch((error) => {
@@ -153,42 +233,96 @@ export default function DinoRyxOnboarding() {
     };
   }, []);
 
-  const toggleGoal = (id: string) =>
-    setGoals((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
-
-  const toggleDay = (day: string) =>
-    setSelectedDays((d) =>
-      d.includes(day) ? d.filter((x) => x !== day) : [...d, day]
-    );
+  const findRole = (): diffQsRole => {
+    if (role === "student") return "student";
+    if (role === "trainer" || role === "gym_owner") return "trainer";
+    return "normal"
+  }
 
   const goNext = () => setStep((s) => Math.min(TOTAL_STEPS, s + 1));
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   const handleFinishSetup = () => {
-    const onboardingData = {
-      source,
-      sourceLabel: sourceLabel(source),
-      role,
-      roleLabel: roleLabel(role),
-      goals,
-      experience,
-      experienceLabel: experienceLabel(experience),
-      sessionsPerWeek,
-      selectedDays,
-      city,
-      remindersOn,
-      community,
-      communityLabel: communityLabel(community),
-    };
+    const data = createResponse(
+      collectionRes,
+      323252,
+      25453245
+    );
 
-    console.log("DinoRyx onboarding data:", onboardingData);
+    console.log(data);
     setFinished(true);
   };
 
-  const scheduleSummary =
-    selectedDays.length > 0
-      ? `${sessionsPerWeek}x / week · ${selectedDays.join(", ")}`
-      : `${sessionsPerWeek}x / week`;
+  function createResponse(
+    collection: Collection[],
+    sessionId: number,
+    surveyVersionId: number
+  ): ResponseToBack {
+    const responses: Record<number, ResponseEntry> = {};
+
+    collection.forEach((item) => {
+      if (!item.type) return;
+      if ((item.role !== findRole()) && (item.role !== "normal")) return;
+
+      switch (item.type) {
+        case "SINGLE":
+          if (item.option?.length) {
+            responses[item.QsId] = {
+              selectedOptionId: item.option[0],
+            };
+          }
+          break;
+
+        case "MULTIPLE":
+          if (item.option?.length) {
+            responses[item.QsId] = {
+              selectedOptionIds: item.option,
+            };
+          }
+          break;
+
+        case "TEXT":
+        case "SCALE":
+        case "BOOLEAN":
+          if (item.freeText !== undefined) {
+            responses[item.QsId] = {
+              freeTextValue: item.freeText,
+            };
+          }
+          break;
+      }
+    });
+
+    return {
+      sessionId,
+      surveyVersionId,
+      responses,
+    };
+  }
+
+  function FilterRequiredContinueButton() {
+    // let currentRole: diffQsRole = findRole();
+    // let result;
+    // if(step <= 2){
+    //   result = collectionRes.filter((cr) => cr.step === step)
+    // }else{
+    //   collectionRes.filter((cr) => cr.step === step && cr.role === currentRole);
+    // }
+    // console.log(result);
+
+    return (
+      <Button
+        type="button"
+        onClick={goNext}
+        className="relative z-0 cursor-pointer h-11 gap-1.5 rounded-full bg-(--symbol-color) px-6 font-semibold text-[#0a0f22] hover:bg-(--symbol-color)/90"
+      >
+        Continue
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    );
+  }
+
+  const scheduleSummary = `${findCollectionOption(collectionRes, "work_day", findRole())?.length}x / week ·`
 
   return (
     <div className="relative min-h-screen w-full  px-6 py-8 text-[#f0f4f8] md:px-10 overflow-hidden">
@@ -277,20 +411,16 @@ export default function DinoRyxOnboarding() {
             <>
               {/* ---------------- Step content ---------------- */}
               <div className="min-h-[340px]">
-                <NormalQuestions step={step} questions={demoQuestions} source={source} setSource={setSource} role={role} setRole={setRole} 
+                <NormalQuestions step={step} setRole={setRole} questions={demoQuestions}
+                  addResponse={addResponse} getSelectedOptionId={getSelectedOptionId}
                 />
 
-                <StudentQuestions role={role} questions={demoQuestions} step={step} goals={goals} toggleGoal={toggleGoal}
-                  selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
-                  remindersOn={remindersOn} setRemindersOn={setRemindersOn} communityStudentOptions={communityStudentOptions}
-                  community={community} setCommunity={(id) => setCommunity(id as Community)}
+                <StudentQuestions role={role} questions={demoQuestions} step={step}
+                  addResponse={addResponse} getSelectedOptionId={getSelectedOptionId}
                 />
 
-                <TrainerQuestions role={role} questions={demoQuestions} step={step} experience={experience} setExperience={setExperience}
-                  sessionsPerWeek={sessionsPerWeek} setSessionsPerWeek={setSessionsPerWeek}
-                  selectedDays={selectedDays} toggleDay={toggleDay} city={city} setCity={setCity}
-                  communityTrainerOptions={communityTrainerOptions} community={community} setCommunity={(id) => setCommunity(id as Community)}
-                  studentCount={studentCount} setStudentCount={setStudentCount}
+                <TrainerQuestions role={role} questions={demoQuestions} step={step}
+                  addResponse={addResponse} getSelectedOptionId={getSelectedOptionId}
                 />
 
                 {step === 6 && (
@@ -306,21 +436,21 @@ export default function DinoRyxOnboarding() {
                       <SummaryCard
                         icon={Search}
                         label="Heard about us via"
-                        value={sourceLabel(source)}
+                        value={sourceLabel(collectionRes)}
                       />
-                      <SummaryCard icon={Users} label="Role" value={roleLabel(role)} />
+                      <SummaryCard icon={Users} label="Role" value={roleLabel(collectionRes)} />
                       {role === "student" && (
                         <SummaryCard
                           icon={Target}
                           label="Goals"
-                          value={goals.length > 0 ? `${goals.length} selected` : "Not set"}
+                          value={`${findCollectionOption(collectionRes, "user_goals", "student")?.length} selected`}
                         />
                       )}
                       {role !== "student" && (
                         <SummaryCard
                           icon={Trophy}
                           label="Experience"
-                          value={experienceLabel(experience)}
+                          value={experienceLabel(collectionRes)}
                         />
                       )}
 
@@ -332,21 +462,21 @@ export default function DinoRyxOnboarding() {
                       <SummaryCard
                         icon={MapPin}
                         label="City"
-                        value={city || "Not set"}
+                        value={collectionRes.find((q) => q.QsKey === "user_location" && q.role === findRole())?.freeText || "Not set"}
                       />
 
                       {role === "student" && (
                         <SummaryCard
                           icon={Bell}
                           label="Reminders"
-                          value={remindersOn ? "On" : "Off"}
+                          value={collectionRes.find((q) => q.QsKey === "workout_reminder" && q.role === findRole())?.freeText == 'true' ? "On" : "Off"}
                         />
                       )}
 
                       <SummaryCard
                         icon={Heart}
                         label="Community"
-                        value={communityLabel(community)}
+                        value={communityLabel(collectionRes, findRole())}
                       />
                     </div>
                   </div>
@@ -375,10 +505,10 @@ export default function DinoRyxOnboarding() {
                       <span
                         key={idx}
                         className={`h-2 rounded-full transition-all ${isCurrent
-                            ? "w-7 bg-gradient-to-r from-(--symbol-color) to-[#7fd7e0]"
-                            : isDone
-                              ? "w-2 bg-(--symbol-color)"
-                              : "w-2 bg-white/15"
+                          ? "w-7 bg-gradient-to-r from-(--symbol-color) to-[#7fd7e0]"
+                          : isDone
+                            ? "w-2 bg-(--symbol-color)"
+                            : "w-2 bg-white/15"
                           }`}
                       />
                     );
@@ -386,14 +516,15 @@ export default function DinoRyxOnboarding() {
                 </div>
 
                 {step < TOTAL_STEPS ? (
-                  <Button
-                    type="button"
-                    onClick={goNext}
-                    className="relative z-0 cursor-pointer h-11 gap-1.5 rounded-full bg-(--symbol-color) px-6 font-semibold text-[#0a0f22] hover:bg-(--symbol-color)/90"
-                  >
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <FilterRequiredContinueButton />
+                  // <Button
+                  //   type="button"
+                  //   onClick={goNext}
+                  //   className="relative z-0 cursor-pointer h-11 gap-1.5 rounded-full bg-(--symbol-color) px-6 font-semibold text-[#0a0f22] hover:bg-(--symbol-color)/90"
+                  // >
+                  //   Continue
+                  //   <ArrowRight className="h-4 w-4" />
+                  // </Button>
                 ) : (
                   <Button
                     type="button"

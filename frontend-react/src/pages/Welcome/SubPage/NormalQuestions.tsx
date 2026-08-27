@@ -4,7 +4,7 @@ import type Questions from "../Onboarding.types";
 import type { LucideIcon } from "lucide-react";
 import type { NormalQuestionsProps, Role, Source, NormalKey } from '../Onboarding.types';
 
-export default function NormalQuestions({ step, questions, source, setSource, role, setRole }:
+export default function NormalQuestions({ setRole ,step, questions, addResponse, getSelectedOptionId}:
     NormalQuestionsProps
 ) {
     const [hearAbout, setHearAbout] = useState<Questions<Source> | undefined>();
@@ -66,13 +66,13 @@ export default function NormalQuestions({ step, questions, source, setSource, ro
                     </p>
 
                     <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {hearAbout?.options.map(({ id, icon: Icon, optionText, optionKey }) => {
-                            const selected = source === optionKey;
+                        {hearAbout?.options.map(({ id, icon: Icon, optionText }) => {
+                            const selected = getSelectedOptionId(hearAbout.questionKey, "normal")?.options?.includes(id);
                             return (
                                 <button
                                     key={id}
                                     type="button"
-                                    onClick={() => setSource(optionKey)}
+                                    onClick={() => {addResponse({QsKey: hearAbout.questionKey, QsId:hearAbout.id, type: hearAbout.type, step: step, option:[id]}, "normal")}}
                                     className={`relative flex items-center gap-4 rounded-4xl px-5 py-6 text-left ring-1 transition-all ${selected
                                         ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187)] ring-(--symbol-color)"
                                         : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
@@ -110,12 +110,12 @@ export default function NormalQuestions({ step, questions, source, setSource, ro
 
                     <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
                         {userRole?.options.map(({ id, icon: Icon, optionText, optionKey, description }) => {
-                            const selected = role === optionKey;
+                            const selected = getSelectedOptionId(userRole.questionKey, "normal")?.options?.includes(id);
                             return (
                                 <button
                                     key={id}
                                     type="button"
-                                    onClick={() => setRole(optionKey)}
+                                    onClick={() => {setRole(optionKey); addResponse({QsKey: userRole.questionKey, QsId:userRole.id, type: userRole.type, step: step, option:[id]}, "normal")}}
                                     className={`relative flex flex-col items-start gap-3 rounded-2xl p-5 text-left ring-1 transition-all ${selected
                                         ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
                                         : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"

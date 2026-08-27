@@ -103,8 +103,8 @@ export const demoQuestions: Questions[] = [
       },
       {
         id: 11,
-        optionKey: "General Health",
-        optionText: "general_health",
+        optionKey: "general_health",
+        optionText: "General Health",
         order: 4,
         active: true
       },
@@ -256,7 +256,7 @@ export const demoQuestions: Questions[] = [
   {
     id: 9,
     order: 9,
-    questionKey: "work_Sessions_week",
+    questionKey: "work_sessions_week",
     questionText: "Sessions per week",
     type: "SCALE",
     required: true,

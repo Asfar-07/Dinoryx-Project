@@ -5,57 +5,97 @@ import { MapPin, Bell, Dumbbell, Flame, Timer, HeartPulse, Trophy, Target } from
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import type Questions from "../Onboarding.types";
-import type { StudentQuestions, GoalOptionKey, StudentKey, DaysKey } from '../Onboarding.types';
+import type { StudentQuestions, GoalOptionKey, StudentKey, DaysKey, Community } from '../Onboarding.types';
 
-export default function StudentQuestions({ role, questions, step, goals, toggleGoal, selectedDays, toggleDay,
-  city, setCity, remindersOn, setRemindersOn, communityStudentOptions, community, setCommunity }:
-  StudentQuestions) {
+export default function StudentQuestions({ role, questions, step, addResponse, getSelectedOptionId }: StudentQuestions) {
 
-    const [userGoal, setUserGoal] = useState<Questions<GoalOptionKey> | undefined>();
-    const [workDay, setWorkDay] = useState<Questions<DaysKey> | undefined>();
-    const [qCity,setQCity] = useState<Questions<string>>();
+  const [userGoal, setUserGoal] = useState<Questions<GoalOptionKey> | undefined>();
+  const [workDay, setWorkDay] = useState<Questions<DaysKey> | undefined>();
+  const [qCity, setQCity] = useState<Questions<string> | undefined>();
+  const [reminder, setReminder] = useState<Questions<string> | undefined>();
+  const [community, setCommunity] = useState<Questions<string> | undefined>();
+  const toBoolean = (value?: string): boolean => value === "true";
 
-    useEffect(() => {
-      const getGoalIcons = (key: GoalOptionKey): LucideIcon => {
+  const communityStudentOptions: {
+    id: Community;
+    title: string;
+    description: string;
+    value: boolean
+  }[] = [
+      {
+        id: "yes",
+        title: "Yes, I'm in!",
+        description: "Count me in for updates & feedback",
+        value: true
+      },
+      {
+        id: "later",
+        title: "Maybe later",
+        description: "I'll decide another time",
+        value: false
+      },
+    ];
 
-        if(key === "strength") return Dumbbell
-        if(key === "fat_loss") return Flame
-        if(key === "endurance") return Timer
-        if(key === "general_health") return HeartPulse
-        if(key === "competition_prep") return Trophy
-        return Target
-      };
-      questions.forEach((qs) => {
-         if (qs.questionKey as StudentKey === "user_goals"){
-          const userGoalQuestion: Questions<GoalOptionKey> = {
-            ...qs,
-            options: qs.options.map((opt) => ({
-              ...opt,
-              optionKey: opt.optionKey as GoalOptionKey,
-              icon: getGoalIcons(opt.optionKey as GoalOptionKey)
-            }))
-          }
+  useEffect(() => {
+    const getGoalIcons = (key: GoalOptionKey): LucideIcon => {
 
-          setUserGoal(userGoalQuestion);
-         }
+      if (key === "strength") return Dumbbell
+      if (key === "fat_loss") return Flame
+      if (key === "endurance") return Timer
+      if (key === "general_health") return HeartPulse
+      if (key === "competition_prep") return Trophy
+      return Target
+    };
+    questions.forEach((qs) => {
+      if (qs.questionKey as StudentKey === "user_goals") {
+        const userGoalQuestion: Questions<GoalOptionKey> = {
+          ...qs,
+          options: qs.options.map((opt) => ({
+            ...opt,
+            optionKey: opt.optionKey as GoalOptionKey,
+            icon: getGoalIcons(opt.optionKey as GoalOptionKey)
+          }))
+        }
 
-         if (qs.questionKey as StudentKey === "work_day"){
-          const workDaysQuestion: Questions<DaysKey> = {
-            ...qs,
-            options: qs.options.map((opt) => ({
-              ...opt,
-              optionKey: opt.optionKey as DaysKey,
-            }))
-          }
+        setUserGoal(userGoalQuestion);
+      }
 
-          setWorkDay(workDaysQuestion);
-         }
+      if (qs.questionKey as StudentKey === "work_day") {
+        const workDaysQuestion: Questions<DaysKey> = {
+          ...qs,
+          options: qs.options.map((opt) => ({
+            ...opt,
+            optionKey: opt.optionKey as DaysKey,
+          }))
+        }
 
-         if (qs.questionKey as StudentKey === "user_location"){
-          setQCity({...qs})
-         }
-      })
-    }, [questions])
+        setWorkDay(workDaysQuestion);
+      }
+
+      if (qs.questionKey as StudentKey === "user_location") {
+        const locationQuestion: Questions<string> = {
+          ...qs,
+        }
+        setQCity(locationQuestion)
+      }
+      if(qs.questionKey as StudentKey === "workout_reminder"){
+        const reminder: Questions<string> = {
+          ...qs,
+        }
+        setReminder(reminder)
+      }
+
+      if(qs.questionKey as StudentKey === "build_community"){
+        const community: Questions<string> = {
+          ...qs,
+          questionText: "Do you want to help build a strong fitness community?",
+        }
+        setCommunity(community)
+      }
+
+    })
+    
+  }, [questions])
   return (
     <div>
       {/* user goal for student */}
@@ -67,19 +107,19 @@ export default function StudentQuestions({ role, questions, step, goals, toggleG
           <p className="mt-2 text-[#bac7cc]">Pick as many as you like.</p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {userGoal?.options.map(({ id, optionKey, icon: Icon, optionText }) => {
-              const selected = goals.includes(optionKey);
+            {userGoal?.options.map(({ id, icon: Icon, optionText }) => {
+              const selected = getSelectedOptionId(userGoal.questionKey, "student")?.options?.includes(id);
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => toggleGoal(optionKey)}
+                  onClick={() => { addResponse({ QsKey: userGoal.questionKey, QsId:userGoal.id, type: userGoal.type, step: step, option: [id] }, "student") }}
                   className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold ring-1 transition-colors ${selected
                     ? "bg-[#56b2bb]/15 text-(--symbol-color) ring-(--symbol-color)"
                     : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
                     }`}
                 >
-                  {Icon &&<Icon className="h-4 w-4" />}
+                  {Icon && <Icon className="h-4 w-4" />}
                   {optionText}
                 </button>
               );
@@ -87,7 +127,7 @@ export default function StudentQuestions({ role, questions, step, goals, toggleG
           </div>
 
           <p className="mt-6 text-sm text-[#bac7cc]">
-            {goals.length} selected — you can change these anytime in
+            {userGoal && getSelectedOptionId(userGoal.questionKey, "student")?.options?.length} selected — you can change these anytime in
             settings.
           </p>
         </div>
@@ -104,13 +144,13 @@ export default function StudentQuestions({ role, questions, step, goals, toggleG
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {workDay?.options.map(({id, optionKey, optionText}) => {
-              const selected = selectedDays.includes(optionKey);
+            {workDay?.options.map(({ id, optionText }) => {
+              const selected = getSelectedOptionId(workDay.questionKey, "student")?.options?.includes(id);
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => toggleDay(optionKey)}
+                  onClick={() => { addResponse({ QsKey: workDay.questionKey, QsId:workDay.id, type: workDay.type, step: step, option: [id] }, "student") }}
                   className={`flex h-16 w-16 items-center justify-center rounded-full text-sm font-bold ring-1 transition-colors ${selected
                     ? "bg-(--symbol-color) text-[#0a0f22] ring-(--symbol-color)"
                     : "bg-[#1a2136]/50 text-[#f0f4f8] ring-white/10 cursor-pointer"
@@ -128,34 +168,41 @@ export default function StudentQuestions({ role, questions, step, goals, toggleG
                 <MapPin className="h-4 w-4 text-(--symbol-color)" />
                 {qCity?.questionText}
               </label>
-              <Input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g. Bengaluru"
-                className="mt-2 h-12 rounded-xl border-white/10 bg-[#1a2136] text-[#f0f4f8] placeholder:text-[#bac7cc]/60 focus-visible:ring-(--symbol-color) focus-visible:ring-offset-0"
-              />
+              {
+                qCity &&
+                <Input
+                  value={getSelectedOptionId(qCity.questionKey, "student")?.text}
+                  onChange={(e) => {addResponse({ QsKey: qCity.questionKey, QsId:qCity.id, type: qCity.type, step: step, freeText: e.target.value }, "student") }}
+                  placeholder="e.g. Bengaluru"
+                  className="mt-2 h-12 rounded-xl border-white/10 bg-[#1a2136] text-[#f0f4f8] placeholder:text-[#bac7cc]/60 focus-visible:ring-(--symbol-color) focus-visible:ring-offset-0"
+                />
+              }
+
             </div>
 
             <div className="flex items-center justify-between rounded-xl bg-[#1a2136] px-5 ring-1 ring-white/10">
               <span className="flex items-center gap-2 text-sm font-semibold text-[#f0f4f8]">
                 <Bell className="h-4 w-4 text-(--symbol-color)" />
-                Workout reminders
+                {reminder?.questionText}
               </span>
-              <Switch
-                checked={remindersOn}
-                onCheckedChange={setRemindersOn}
-                className="data-[state=checked]:bg-(--symbol-color)"
+              {
+                reminder &&
+                <Switch
+                checked={toBoolean(getSelectedOptionId(reminder.questionKey, "student")?.text)}
+                onCheckedChange={(b) => {addResponse({ QsKey: reminder.questionKey, QsId:reminder.id, type: reminder.type, step: step, freeText: String(b)}, "student")}}
+                className="data-[state=checked]:bg-(--symbol-color) cursor-pointer"
               />
+              }
             </div>
           </div>
         </div>
       )}
 
       {/* user community for student */}
-      {step === 5 && role === "student" && (
+      {step === 5 && role === "student" && community && (
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Do you want to help build a strong fitness community?
+            { community?.questionText }
           </h1>
           <p className="mt-2 text-[#bac7cc]">
             Join fellow trainers, students and gym owners shaping the
@@ -163,13 +210,13 @@ export default function StudentQuestions({ role, questions, step, goals, toggleG
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {communityStudentOptions.map(({ id, title, description }) => {
-              const selected = community === id;
+            {communityStudentOptions.map(({ id, title, description, value }) => {
+              const selected = toBoolean(getSelectedOptionId(community.questionKey, "student")?.text) === value;
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setCommunity(id)}
+                  onClick={() => { addResponse({ QsKey: community.questionKey, QsId:community.id, type: community.type, step: step, freeText: String(value) }, "student")}}
                   className={`relative flex flex-col items-start gap-1 rounded-2xl p-5 text-left ring-1 transition-all ${selected
                     ? "bg-[#1a2136] shadow-[0_0_30px_-8px_rgba(86,178,187,0.5)] ring-(--symbol-color)"
                     : "bg-[#1a2136]/50 ring-white/10 cursor-pointer"
